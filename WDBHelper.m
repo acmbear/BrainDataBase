@@ -15,7 +15,7 @@ classdef WDBHelper
             interfaceFolder = fullfile(dbPath, [dbName,obj.DBINTERFACEFOLDERPOSTFIX]);
             addpath(interfaceFolder);
             load(dbFile);
-            ind = wsearchString(obj.interfaceList, db.interfaceclass, 1);
+            ind = wsearchstring(obj.interfaceList, db.interfaceclass, 1);
             if ~isempty(ind)
                 warning('dbinterface: %s has already been opened, may override the original one!',db.interfaceclass);
             end

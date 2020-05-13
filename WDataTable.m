@@ -23,9 +23,9 @@ classdef WDataTable
             else
                 error('WDataTable: invalid parameter.');
             end
-            if ~dtValidation(obj)
-                error('WDataTable: data and attribute unmatched.');
-            end
+%             if ~dtValidation(obj)
+%                 error('WDataTable: data and attribute unmatched.');
+%             end
         end
 
         function [obj, rowIndex, colIndex] = selectDataTable(obj, rowExpr, colExpr)
@@ -61,12 +61,12 @@ classdef WDataTable
             if ~isempty(rowIndex)
                 obj.data = obj.data(rowIndex,:);
                 func = @(x) x(rowIndex,:);
-                obj.rowAttribute = wtraverseStruct(func, obj.rowAttribute);
+                obj.rowAttribute = wtraversestruct(func, obj.rowAttribute);
             end
             if ~isempty(columnIndex)
                 obj.data = obj.data(:,columnIndex);
                 func = @(x) x(:,columnIndex);
-                obj.columnAttribute = wtraverseStruct(func, obj.columnAttribute);
+                obj.columnAttribute = wtraversestruct(func, obj.columnAttribute);
             end
         end
         
@@ -74,11 +74,11 @@ classdef WDataTable
             obj.data = obj.data';
             func = @(x) x';
             if ~isempty(obj.columnAttribute)
-                rowAttr = wtraverseStruct(func, obj.columnAttribute);
+                rowAttr = wtraversestruct(func, obj.columnAttribute);
                 obj.rowAttribute = rowAttr;
             end
             if ~isempty(obj.rowAttribute)
-                columnAttr = wtraverseStruct(func, obj.rowAttribute);
+                columnAttr = wtraversestruct(func, obj.rowAttribute);
                 obj.columnAttribute = columnAttr;
             end
         end
@@ -96,11 +96,11 @@ classdef WDataTable
             columnIndex = [];
             if ~isempty(rowKey)
                 refRowValue = obj.rowAttribute.(rowKey);
-                rowIndex = get_refindex(foreignRowValue, refRowValue);
+                rowIndex = wgetrefindex(foreignRowValue, refRowValue);
             end
             if ~isempty(columnKey)
                 refColumnValue = obj.columnAttribute.(columnKey);
-                columnIndex = get_refindex(foreignColumnValue, refColumnValue);
+                columnIndex = wgetrefindex(foreignColumnValue, refColumnValue);
             end
             obj = rangeDataTableIndex(obj, rowIndex, columnIndex);
         end
@@ -119,8 +119,8 @@ classdef WDataTable
                 rowResult = false;
                 colResult = false;
                 [dataRowNum, dataColNum] = size(obj.data);
-                [raRowNum, ~] = size(obj.rowAttribute);
-                [~, caColNum] = size(obj.columnAttribute);
+                [raRowNum, ~] = size(obj.rowAttribute);  % wrong, need to fix
+                [~, caColNum] = size(obj.columnAttribute);  % wrong, need to fix
                 if raRowNum == 0 || raRowNum == dataRowNum % row attribute can be empty, or must have the same row number as the data
                     rowResult = true;
                 end
@@ -175,14 +175,20 @@ for n = 1:length(selectExpr)
         [results, mdVal] = pop_stack(results);
         [results, mdKey] = pop_stack(results);
 
-%         md = get_metadata(metaData, mdKey);
         md = metaData.(mdKey);
         md(isnan(md)) = 0;
         
-%         results = push_stack(results, ...
-%             get_metadata(metaData, mdKey) == str2num(mdVal));
         results = push_stack(results, ...
             metaData.(mdKey) == str2num(mdVal));
+    elseif strcmp(selectExpr{n}, 'not')
+        [results, mdVal] = pop_stack(results);
+        [results, mdKey] = pop_stack(results);
+
+        md = metaData.(mdKey);
+        md(isnan(md)) = 0;
+        
+        results = push_stack(results, ...
+            metaData.(mdKey) ~= str2num(mdVal));
     elseif strcmp(selectExpr{n}, 'top')
         % 'A top n'
         [results, topNum] = pop_stack(results);
@@ -245,7 +251,7 @@ function rpn = parse_selectexpr(expr)
 %
 
 signs = {'(', ')'};
-operators = {'=', '|', '&', '@', 'top'};
+operators = {'=', '|', '&', '@', 'top', 'not'};
 
 % Lexical analysis
 buf    = [];
@@ -262,6 +268,14 @@ for n = 1:length(expr)
         tokens{end+1} = expr(n);
     else
         buf = [ buf, expr(n) ];
+    end
+    
+    if length(buf) >= 3 && strcmp(buf(end-2:end), 'not')
+        if length(buf) ~= 3
+            tokens{end + 1} = buf(1:end-3);
+        end
+        tokens{end + 1} = 'not';
+        buf = [];
     end
 
     if length(buf) >= 3 && strcmp(buf(end-2:end), 'top')
@@ -351,7 +365,7 @@ function isPrecede = op_precede(a, b)
 
 isPrecede = false;
 switch a
-  case {'=', 'top'}
+  case {'=', 'not', 'top'}
     a_preced = 7;
   case {'&', '|'}
     a_preced = 5;
@@ -363,7 +377,7 @@ switch a
 end
 
 switch b
-  case {'=', 'top'}
+  case {'=', 'not', 'top'}
     b_preced = 7;
   case {'&', '|'}
     b_preced = 5;

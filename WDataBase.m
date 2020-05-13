@@ -18,7 +18,11 @@ classdef WDataBase
         end
         
         function dtable = loadTable(obj, tableName, subpara)
-            ind = wsearchString(obj.DB.(obj.TABLENAMEFIELD)(:,1), tableName, 1);
+            if nargin == 2
+                subpara = [];
+            end
+            
+            ind = wsearchstring(obj.DB.(obj.TABLENAMEFIELD)(:,1), tableName, 1);
             if isempty(ind)
                 dtable = loadUnRegularTabel(obj, tableName, subpara);
             else
@@ -32,9 +36,13 @@ classdef WDataBase
         end
         
         function obj = addTable(obj, tableName, tableFile)
+            if nargin == 2
+                tableFile = [];
+            end
+            
             tableList = obj.DB.(obj.TABLENAMEFIELD);
             if ~isempty(tableList)
-                ind = wsearchString(tableList(:,1), tableName, 1);
+                ind = wsearchstring(tableList(:,1), tableName, 1);
                 if ~isempty(ind)
                     error('table: %s exists, cannot create a new one',tableName);
                 end
@@ -43,8 +51,8 @@ classdef WDataBase
                 relTableFile = '';
             else
                 [tableFilePath,tableFileName,tableFileExt] = fileparts(tableFile);
-                tableFilePath = wabsolutePath(tableFilePath);
-                relPath = relativepath(tableFilePath, obj.DBPath);
+                tableFilePath = wabsolutepath(tableFilePath);
+                relPath = wrelativepath(tableFilePath, obj.DBPath);
                 relTableFile = fullfile(relPath,[tableFileName,tableFileExt]);
             end
             tableList = [tableList; {tableName, relTableFile}];
@@ -64,7 +72,7 @@ classdef WDataBase
         end
         
         function dtable = loadRegularTabel(obj, tableName, subpara)
-            ind = wsearchString(obj.DB.(obj.TABLENAMEFIELD)(:,1), tableName, 1);
+            ind = wsearchstring(obj.DB.(obj.TABLENAMEFIELD)(:,1), tableName, 1);
             relativePath = obj.DB.(obj.TABLENAMEFIELD){ind(1),2};
             tPath = fullfile(obj.DBPath, relativePath);
             dtable = WDataTable(tPath);
@@ -77,7 +85,7 @@ classdef WDataBase
                 obj.DBFile = dbFile;
                 obj.DB = db;
                 [dbPath, dbName, dbExt] = fileparts(dbFile);
-                obj.DBPath = wabsolutePath(dbPath);
+                obj.DBPath = wabsolutepath(dbPath);
                 obj.DBName = dbName;
             else
                 error(msg);
