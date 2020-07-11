@@ -88,6 +88,10 @@ classdef WDataTable
             obj = obj;
         end
         
+        function obj = reduceData(obj, rowKey, columnKey, method)
+            
+        end
+        
         function [obj, rowIndex, columnIndex] = refDataTable(obj, rowKey, foreignRowValue, columnKey, foreignColumnValue)
             if nargin <= 3 
                 columnKey = ''; 
