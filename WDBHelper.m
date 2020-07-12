@@ -10,7 +10,11 @@ classdef WDBHelper
             obj.interfaceList = {};
         end
         
-        function [obj, wdb] = connectDB(obj, dbFile)
+        function [obj, wdb] = connectDB(obj, dbFile, readonly)
+            if exist('mode','var')
+                readonly = 0; % 0表示可以读写，1表示只读
+            end
+           
             [dbPath, dbName, ~] = fileparts(dbFile);
             interfaceFolder = fullfile(dbPath, [dbName,obj.DBINTERFACEFOLDERPOSTFIX]);
             addpath(interfaceFolder);
@@ -19,7 +23,7 @@ classdef WDBHelper
             if ~isempty(ind)
                 warning('dbinterface: %s has already been opened, may override the original one!',db.interfaceclass);
             end
-            wdb = feval(db.interfaceclass, dbFile);
+            wdb = feval(db.interfaceclass, dbFile, readonly);
             obj.interfaceList = [obj.interfaceList, db.interfaceclass];
 %             rmpath(interfaceFolder);
         end

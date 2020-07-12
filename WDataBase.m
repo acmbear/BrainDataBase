@@ -5,6 +5,8 @@ classdef WDataBase
         DBName
         DBFile
         DB
+        readOnly
+        cache
     end
     
     properties (Access = private)
@@ -13,13 +15,22 @@ classdef WDataBase
     end
     
     methods
-        function obj = WDataBase(dbFile)
+        function obj = WDataBase(dbFile, readonly)
             obj = openDataBase(obj, dbFile);
+            obj.readOnly = readonly;
+            obj.cache = [];
         end
         
-        function dtable = loadTable(obj, tableName, subpara)
+        function [obj, dtable] = loadTable(obj, tableName, subpara)
             if nargin == 2
                 subpara = [];
+            end
+            
+            if obj.readOnly && ~isempty(obj.cache)
+                if isfield(obj.cache,tableName)
+                    dtable = obj.cache.(tableName);
+                    return;
+                end
             end
             
             ind = wsearchstring(obj.DB.(obj.TABLENAMEFIELD)(:,1), tableName, 1);
@@ -32,6 +43,10 @@ classdef WDataBase
                 else
                     dtable = loadRegularTabel(obj, tableName, subpara);
                 end
+            end
+            
+            if obj.readOnly
+                obj.cache.(tableName) = dtable;
             end
         end
         
