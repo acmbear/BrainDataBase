@@ -3,13 +3,13 @@ classdef wDBInterfaceTemplate < WDataBase
     end
     
     methods
-        function obj = wDBInterfaceTemplate(dbFile)
-            obj@WDataBase(dbFile);
+        function obj = wDBInterfaceTemplate(dbFile, readonly)
+            obj@WDataBase(dbFile, readonly);
         end
     end
     
     methods (Access = protected)
-        function dtable = loadUnRegularTabel(obj, tableName, subpara)
+        function [obj, dtable] = loadUnRegularTabel(obj, tableName, subpara)
         % code your table load function here
         end
     end

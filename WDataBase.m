@@ -6,6 +6,9 @@ classdef WDataBase
         DBFile
         DB
         readOnly
+    end
+    
+    properties (Access = private)
         cache
     end
     
@@ -35,13 +38,13 @@ classdef WDataBase
             
             ind = wsearchstring(obj.DB.(obj.TABLENAMEFIELD)(:,1), tableName, 1);
             if isempty(ind)
-                dtable = loadUnRegularTabel(obj, tableName, subpara);
+                [obj, dtable] = loadUnRegularTabel(obj, tableName, subpara);
             else
                 relativePath = obj.DB.(obj.TABLENAMEFIELD){ind(1),2};
                 if isempty(relativePath)
-                    dtable = loadUnRegularTabel(obj, tableName, subpara);
+                    [obj, dtable] = loadUnRegularTabel(obj, tableName, subpara);
                 else
-                    dtable = loadRegularTabel(obj, tableName, subpara);
+                    [obj, dtable] = loadRegularTabel(obj, tableName, subpara);
                 end
             end
             
@@ -81,12 +84,12 @@ classdef WDataBase
         end
     end
     
-    methods (Access = protected)
-        function dtable = loadUnRegularTabel(obj, tableName, subpara)
-            dtable = WDataTable();
-        end
-        
-        function dtable = loadRegularTabel(obj, tableName, subpara)
+    methods (Abstract, Access = protected)
+        [obj, dtable] = loadUnRegularTabel(obj, tableName, subpara);
+    end
+    
+    methods (Access = private)        
+        function [obj, dtable] = loadRegularTabel(obj, tableName, subpara)
             ind = wsearchstring(obj.DB.(obj.TABLENAMEFIELD)(:,1), tableName, 1);
             relativePath = obj.DB.(obj.TABLENAMEFIELD){ind(1),2};
             tPath = fullfile(obj.DBPath, relativePath);

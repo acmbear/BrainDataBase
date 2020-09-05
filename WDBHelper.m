@@ -11,7 +11,7 @@ classdef WDBHelper
         end
         
         function [obj, wdb] = connectDB(obj, dbFile, readonly)
-            if exist('mode','var')
+            if ~exist('readonly','var')
                 readonly = 0; % 0表示可以读写，1表示只读
             end
            
